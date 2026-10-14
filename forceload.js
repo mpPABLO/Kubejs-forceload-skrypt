@@ -1,6 +1,7 @@
 const MAX_CHUNKS = 2000
 const CHECK_INTERVAL = 20
 const DATA_KEY = 'autoload_chunks'
+const TARGET_DIM = 'compactmachines:compact_world'
 
 let known = null
 
@@ -9,7 +10,7 @@ function loadKnown(server) {
     let raw = server.persistentData.getString(DATA_KEY)
     if (raw && raw.length > 0) {
         raw.split(';').forEach(entry => {
-            if (entry.length > 0) known.add(entry)
+            if (entry.length > 0 && entry.split('|')[0] === TARGET_DIM) known.add(entry)
         })
     }
 }
@@ -39,9 +40,10 @@ ServerEvents.tick(event => {
 
     let changed = false
     server.players.forEach(player => {
+        let dim = String(player.level.dimension)
+        if (dim !== TARGET_DIM) return
         let cx = player.blockX >> 4
         let cz = player.blockZ >> 4
-        let dim = String(player.level.dimension)
         let entry = dim + '|' + cx + '|' + cz
         if (known.has(entry)) return
         if (known.size >= MAX_CHUNKS) return
